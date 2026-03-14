@@ -23,7 +23,7 @@
 <div align="center">
   <!-- ВАЖНО: Перетащите ваше видео в формате .mp4 прямо в редактор GitHub, 
        скопируйте полученную ссылку и вставьте её вместо СЮДА_ВСТАВИТЬ_ССЫЛКУ -->
-  <video src="СЮДА_ВСТАВИТЬ_ССЫЛКУ_НА_ВИДЕО_ОТ_GITHUB" width="800" controls="controls"></video>
+  <video src="https://github.com/user-attachments/assets/ff33bbb5-6ba8-44a7-8827-cf4fe9b79268" width="800" controls="controls"></video>
   <br>
   <i>*Генерация стратегий и интерактивный дашборд визуализации*</i>
 </div>
