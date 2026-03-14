@@ -1,0 +1,1311 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PersonaShift — Smart Pipeline</title>
+    <meta
+      name="description"
+      content="PersonaShift — генерация маркетинговой стратегии и визуализация адаптированной воронки касаний."
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            boxShadow: {
+              glow: "0 0 0 1px rgba(139,92,246,.55), 0 0 30px rgba(124,58,237,.35)",
+            },
+          },
+        },
+      };
+    </script>
+
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      body {
+        background: #02030a;
+      }
+
+      .bg-noise {
+        background-image:
+          radial-gradient(1200px 650px at -5% 25%, rgba(124, 58, 237, 0.18), transparent 55%),
+          radial-gradient(900px 700px at 105% 70%, rgba(37, 99, 235, 0.2), transparent 52%),
+          radial-gradient(500px 500px at 85% 20%, rgba(56, 189, 248, 0.08), transparent 52%);
+      }
+
+      .glass-card {
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+
+      .inner-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.11);
+      }
+
+      .glass-hover {
+        transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .glass-hover:hover {
+        transform: translateY(-1px);
+        border-color: rgba(167, 139, 250, 0.65);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .glow-purple {
+        box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.65), 0 0 26px rgba(139, 92, 246, 0.35);
+      }
+
+      .pill {
+        border-radius: 9999px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.82);
+        transition: all 0.2s ease;
+      }
+
+      .pill:hover {
+        border-color: rgba(167, 139, 250, 0.65);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .pill-active {
+        border-color: rgba(167, 139, 250, 0.82) !important;
+        background: rgba(124, 58, 237, 0.34) !important;
+        color: white !important;
+        box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.48), 0 0 20px rgba(124, 58, 237, 0.32);
+      }
+
+      .text-muted {
+        color: rgba(255, 255, 255, 0.64);
+      }
+
+      .skeleton {
+        position: relative;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .skeleton::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.11), transparent);
+        animation: shimmer 1.3s infinite;
+      }
+
+      @keyframes shimmer {
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        border-top-color: white;
+        border-radius: 9999px;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen text-white antialiased">
+    <div class="bg-noise min-h-screen w-full">
+      <header class="w-full max-w-[1440px] mx-auto px-6 pt-6 pb-4">
+        <div class="glass-card rounded-2xl px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="h-9 w-9 rounded-xl bg-violet-500/30 border border-violet-300/50 flex items-center justify-center shadow-glow">
+              <iconify-icon icon="solar:magic-stick-3-bold-duotone" class="text-violet-200 text-xl"></iconify-icon>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase tracking-[0.2em] text-white/50">AI TOOL</p>
+              <h1 class="text-lg font-semibold leading-none">PersonaShift</h1>
+            </div>
+          </div>
+
+          <nav class="inner-card rounded-xl p-1 flex items-center gap-1">
+            <button
+              id="switchToVisual"
+              type="button"
+              data-tab="visual"
+              class="tab-btn px-4 py-2 rounded-lg text-sm font-medium"
+            >
+              Визуализация
+            </button>
+            <button
+              id="switchToStrategy"
+              type="button"
+              data-tab="strategy"
+              class="tab-btn px-4 py-2 rounded-lg text-sm font-medium"
+            >
+              Создать стратегию
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      <main class="w-full max-w-[1440px] mx-auto px-6 pb-10 space-y-6">
+        <section id="tab-visual" class="space-y-4">
+          <div class="glass-card rounded-2xl p-6 md:p-8 space-y-6">
+            <div>
+              <p class="text-[11px] uppercase tracking-[0.2em] text-white/50">Main Persona Selector</p>
+              <h2 class="text-3xl font-semibold mt-1">Персонализация за секунды</h2>
+              <p class="text-muted mt-2 max-w-3xl">
+                Выберите персону, канал и мгновенно получите оффер, рекомендации и адаптированную воронку коммуникации.
+              </p>
+            </div>
+
+            <div id="personaSelector" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div class="lg:col-span-2 space-y-4">
+                <div class="inner-card rounded-2xl p-6">
+                  <div class="flex items-center justify-between gap-4">
+                    <h3 class="font-semibold">Persona Messaging Previews</h3>
+                    <div id="channelSelect" class="min-w-[220px]"></div>
+                  </div>
+                </div>
+
+                <div id="personaMessaging"></div>
+              </div>
+
+              <aside class="space-y-4">
+                <div class="inner-card rounded-2xl p-6">
+                  <h3 class="font-semibold">Channel Recommendations</h3>
+                  <p class="text-sm text-white/60 mt-1">Рекомендации по роли канала в стратегии.</p>
+                  <div id="recommendationsList" class="mt-4 space-y-3"></div>
+                </div>
+              </aside>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div class="lg:col-span-2 inner-card rounded-2xl p-6">
+                <h3 class="font-semibold">Адаптированная воронка касаний</h3>
+                <div id="funnelSteps" class="mt-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"></div>
+              </div>
+
+              <div class="space-y-4">
+                <div class="inner-card rounded-2xl p-6">
+                  <h3 class="font-semibold">Как говорить с этой персоной</h3>
+                  <div id="toneValue" class="mt-3 text-white font-medium"></div>
+                </div>
+                <div class="inner-card rounded-2xl p-6">
+                  <h4 class="font-semibold">Практические подсказки</h4>
+                  <div id="toneTips" class="mt-3 space-y-2"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-strategy" class="space-y-4 hidden">
+          <div class="glass-card rounded-2xl p-6 md:p-8 space-y-6">
+            <div>
+              <p class="text-[11px] uppercase tracking-[0.2em] text-white/50">Smart Pipeline</p>
+              <h2 class="text-3xl font-semibold mt-1">Создать стратегию</h2>
+              <p class="text-muted mt-2">Опишите продукт, выберите аудиторию и каналы, затем сгенерируйте стратегию через Gemini.</p>
+            </div>
+
+            <div class="inner-card rounded-2xl p-6 space-y-3">
+              <label for="productPrompt" class="text-sm font-medium">Опишите продукт</label>
+              <textarea
+                id="productPrompt"
+                class="w-full min-h-[120px] rounded-xl bg-black/55 border border-white/20 p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-violet-400/60"
+                placeholder="Например: AI-сервис для построения персонализированных маркетинговых стратегий для малого бизнеса"
+              ></textarea>
+            </div>
+
+            <div class="inner-card rounded-2xl p-6 space-y-3">
+              <label for="geminiApiKeyInput" class="text-sm font-medium">Gemini API key</label>
+              <input
+                id="geminiApiKeyInput"
+                type="password"
+                autocomplete="off"
+                class="w-full rounded-xl bg-black/55 border border-white/20 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-violet-400/60"
+                placeholder="Вставьте API-ключ Gemini"
+              />
+              <p class="text-xs text-white/55">Ключ хранится локально в браузере и используется только для запроса в Gemini API.</p>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <div class="inner-card rounded-2xl p-6 space-y-4">
+                <div class="flex items-center justify-between gap-4">
+                  <h3 class="font-semibold">Выберите категории для рекламы</h3>
+                  <label class="text-sm text-white/70 inline-flex items-center gap-2">
+                    <input id="autoPickCategories" type="checkbox" class="accent-violet-400" />
+                    Поручить выбор AI
+                  </label>
+                </div>
+                <div id="categoryPills" class="flex flex-wrap gap-2"></div>
+              </div>
+
+              <div class="inner-card rounded-2xl p-6 space-y-4">
+                <div class="flex items-center justify-between gap-4">
+                  <h3 class="font-semibold">Выбор каналов</h3>
+                  <label class="text-sm text-white/70 inline-flex items-center gap-2">
+                    <input id="autoPickChannels" type="checkbox" class="accent-violet-400" />
+                    Поручить выбор AI
+                  </label>
+                </div>
+                <div id="channelPills" class="flex flex-wrap gap-2"></div>
+              </div>
+            </div>
+
+            <div class="inner-card rounded-2xl p-4 md:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <button
+                id="generateStrategyBtn"
+                type="button"
+                class="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold bg-violet-500 hover:bg-violet-400 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                Сгенерировать стратегию
+              </button>
+              <p id="strategyHint" class="text-sm text-emerald-300/90">Готово к генерации стратегии.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      // --- Configuration ---
+      const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+      const GEMINI_API_KEY_STORAGE = "personashift:gemini-api-key:v1";
+      const STRATEGY_CACHE_KEY = "personashift:last-successful-strategy:v1";
+
+      const defaultCategories = [
+        "Студенты",
+        "Мамы в декрете",
+        "Владельцы малого бизнеса",
+        "HR-менеджеры",
+        "Фрилансеры",
+        "Стартаперы",
+        "Инвесторы",
+      ];
+
+      const defaultChannels = [
+        "Telegram",
+        "VKontakte",
+        "Email-рассылка",
+        "Яндекс.Директ",
+        "WhatsApp",
+        "SEO / Блог",
+        "YouTube",
+        "SMS / Push",
+      ];
+
+      const channelIconMap = {
+        Telegram: { icon: "logos:telegram", color: "text-sky-300", bg: "bg-sky-500/15" },
+        VKontakte: { icon: "simple-icons:vk", color: "text-blue-300", bg: "bg-blue-500/15" },
+        "Email-рассылка": { icon: "solar:letter-bold-duotone", color: "text-amber-300", bg: "bg-amber-500/15" },
+        "Яндекс.Директ": { icon: "simple-icons:yandex", color: "text-rose-300", bg: "bg-rose-500/15" },
+        WhatsApp: { icon: "logos:whatsapp-icon", color: "text-emerald-300", bg: "bg-emerald-500/15" },
+        "SEO / Блог": { icon: "solar:global-bold-duotone", color: "text-cyan-300", bg: "bg-cyan-500/15" },
+        YouTube: { icon: "logos:youtube-icon", color: "text-red-300", bg: "bg-red-500/15" },
+        "SMS / Push": { icon: "solar:chat-round-line-line-duotone", color: "text-fuchsia-300", bg: "bg-fuchsia-500/15" },
+      };
+
+      const state = {
+        personas: [],
+        activePersonaId: null,
+        selectedChannelByPersona: {},
+        activeTab: "visual",
+        isGenerating: false,
+        geminiApiKey: "",
+        selectedCategories: new Set(["Студенты", "Фрилансеры"]),
+        selectedChannels: new Set(["Telegram", "Email-рассылка", "VKontakte"]),
+      };
+
+      // --- Utilities ---
+      function escapeHtml(input) {
+        return String(input ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      function parseRetryAfterMs(retryAfterValue) {
+        if (!retryAfterValue) return 0;
+
+        const seconds = Number.parseInt(retryAfterValue, 10);
+        if (Number.isFinite(seconds) && seconds >= 0) {
+          return seconds * 1000;
+        }
+
+        const dateMs = Date.parse(retryAfterValue);
+        if (Number.isFinite(dateMs)) {
+          return Math.max(0, dateMs - Date.now());
+        }
+
+        return 0;
+      }
+
+      function loadSavedGeminiApiKey() {
+        try {
+          return localStorage.getItem(GEMINI_API_KEY_STORAGE) || "";
+        } catch (error) {
+          console.warn("Не удалось прочитать Gemini API key:", error);
+          return "";
+        }
+      }
+
+      function saveGeminiApiKey(value) {
+        try {
+          const normalized = String(value || "").trim();
+          if (normalized) {
+            localStorage.setItem(GEMINI_API_KEY_STORAGE, normalized);
+          } else {
+            localStorage.removeItem(GEMINI_API_KEY_STORAGE);
+          }
+        } catch (error) {
+          console.warn("Не удалось сохранить Gemini API key:", error);
+        }
+      }
+
+      function getGeminiUrl(apiKey) {
+        return `${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`;
+      }
+
+      function cleanJson(text) {
+        if (!text) return "";
+        return String(text)
+          .trim()
+          .replace(/^```json\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/```$/i, "")
+          .replace(/[\u0000-\u0019]+/g, "")
+          .trim();
+      }
+
+      function extractJsonObjects(text) {
+        const candidates = [];
+        if (!text) return candidates;
+
+        const source = cleanJson(text);
+        let depth = 0;
+        let start = -1;
+        let inString = false;
+        let escape = false;
+
+        for (let i = 0; i < source.length; i += 1) {
+          const ch = source[i];
+
+          if (inString) {
+            if (escape) {
+              escape = false;
+            } else if (ch === "\\") {
+              escape = true;
+            } else if (ch === '"') {
+              inString = false;
+            }
+            continue;
+          }
+
+          if (ch === '"') {
+            inString = true;
+            continue;
+          }
+
+          if (ch === "{") {
+            if (depth === 0) start = i;
+            depth += 1;
+          } else if (ch === "}") {
+            depth -= 1;
+            if (depth === 0 && start >= 0) {
+              candidates.push(source.slice(start, i + 1));
+              start = -1;
+            }
+          }
+        }
+
+        return candidates;
+      }
+
+      function parseGeminiJson(rawText) {
+        const cleaned = cleanJson(rawText);
+
+        try {
+          return JSON.parse(cleaned);
+        } catch (_) {
+          // Игнорируем и продолжаем через извлечение JSON-фрагментов.
+        }
+
+        const objects = extractJsonObjects(cleaned);
+        for (const chunk of objects) {
+          try {
+            return JSON.parse(chunk);
+          } catch (_) {
+            // Ищем дальше в следующем фрагменте.
+          }
+        }
+
+        return null;
+      }
+
+      function extractPersonasFromResponse(parsed) {
+        if (!parsed) return [];
+
+        const candidateKeys = ["personas", "persona", "audiences", "segments", "data", "result", "results"];
+
+        if (Array.isArray(parsed)) return parsed;
+
+        if (typeof parsed === "object") {
+          for (const key of candidateKeys) {
+            const value = parsed[key];
+            if (Array.isArray(value)) return value;
+            if (value && typeof value === "object") {
+              const nested = extractPersonasFromResponse(value);
+              if (nested.length) return nested;
+            }
+          }
+
+          for (const value of Object.values(parsed)) {
+            if (value && typeof value === "object") {
+              const nested = extractPersonasFromResponse(value);
+              if (nested.length) return nested;
+            }
+          }
+        }
+
+        return [];
+      }
+
+      function normalizeChannelEntry(channel, index) {
+        if (typeof channel === "string") {
+          return {
+            name: channel.trim() || `Канал ${index + 1}`,
+            advice: "Сформируйте конкретный CTA и замерьте переход в следующий этап воронки.",
+          };
+        }
+
+        if (channel && typeof channel === "object") {
+          const name = String(channel.name || channel.channel || channel.title || "").trim() || `Канал ${index + 1}`;
+          const advice = String(channel.advice || channel.recommendation || channel.tip || "").trim() ||
+            "Используйте персонализированный месседж и короткий призыв к действию.";
+          return { name, advice };
+        }
+
+        return {
+          name: `Канал ${index + 1}`,
+          advice: "Протестируйте гипотезу сообщения на этой площадке и оцените качество лидов.",
+        };
+      }
+
+      function ensureMinimumChannels(channels, preferredChannels) {
+        const normalized = channels.map(normalizeChannelEntry).filter((item) => item.name);
+        const existing = new Set(normalized.map((item) => item.name.toLowerCase()));
+        const preferred = (preferredChannels || []).map((name) => ({
+          name,
+          advice: "Подберите формат и частоту публикаций под контекст этого канала.",
+        }));
+
+        for (const item of preferred) {
+          if (!existing.has(item.name.toLowerCase())) {
+            normalized.push(item);
+            existing.add(item.name.toLowerCase());
+          }
+          if (normalized.length >= 3) break;
+        }
+
+        for (const fallback of defaultChannels) {
+          if (normalized.length >= 3) break;
+          if (!existing.has(fallback.toLowerCase())) {
+            normalized.push({
+              name: fallback,
+              advice: "Сфокусируйтесь на одном ключевом аргументе и добавьте чёткий следующий шаг.",
+            });
+            existing.add(fallback.toLowerCase());
+          }
+        }
+
+        return normalized.slice(0, Math.max(3, normalized.length));
+      }
+
+      function normalizePersona(rawPersona, index, preferredChannels) {
+        const channelsRaw = rawPersona?.channels || rawPersona?.recommendations || rawPersona?.channel_list || [];
+        const channels = ensureMinimumChannels(Array.isArray(channelsRaw) ? channelsRaw : [], preferredChannels);
+
+        const name = String(rawPersona?.name || rawPersona?.segment || rawPersona?.title || `Персона ${index + 1}`).trim();
+        const goal = String(rawPersona?.goal || rawPersona?.objective || "Получить прогнозируемый поток лидов").trim();
+        const segmentDescription = String(
+          rawPersona?.segment_description || rawPersona?.description || rawPersona?.segmentDescription || "Сегмент с высокой чувствительностью к ценности, скорости и ясности оффера."
+        ).trim();
+        const offerTitle = String(rawPersona?.offer_title || rawPersona?.offerTitle || `Предложение для ${name}`).trim();
+        const offerText = String(
+          rawPersona?.offer_text || rawPersona?.offerText || "Покажите измеримый результат и удобный путь старта с минимальным риском."
+        ).trim();
+        const tone = String(rawPersona?.tone || "Деловой, экспертный и уважительный").trim();
+
+        return {
+          id: String(rawPersona?.id || index + 1),
+          name,
+          goal,
+          segment_description: segmentDescription,
+          offer_title: offerTitle,
+          offer_text: offerText,
+          tone,
+          channels,
+        };
+      }
+
+      function normalizePersonas(rawPersonas, context) {
+        if (!Array.isArray(rawPersonas)) return [];
+        return rawPersonas
+          .map((item, index) => normalizePersona(item, index, context.selectedChannels))
+          .filter((persona) => persona.name && persona.channels.length >= 3);
+      }
+
+      function getChannelMeta(channelName) {
+        const known = channelIconMap[channelName];
+        if (known) return known;
+        return { icon: "solar:widget-5-bold-duotone", color: "text-violet-200", bg: "bg-violet-500/15" };
+      }
+
+      function getActivePersona() {
+        return state.personas.find((persona) => persona.id === state.activePersonaId) || state.personas[0] || null;
+      }
+
+      function getSelectedChannelForPersona(persona) {
+        if (!persona) return "";
+        const selected = state.selectedChannelByPersona[persona.id];
+        if (selected && persona.channels.some((item) => item.name === selected)) return selected;
+        return persona.channels[0]?.name || "";
+      }
+
+      function applyPersonas(personas) {
+        const previousSelections = { ...state.selectedChannelByPersona };
+        state.personas = personas;
+
+        if (!personas.length) {
+          state.activePersonaId = null;
+          state.selectedChannelByPersona = {};
+          return;
+        }
+
+        const stillExists = personas.some((item) => item.id === state.activePersonaId);
+        state.activePersonaId = stillExists ? state.activePersonaId : personas[0].id;
+
+        state.selectedChannelByPersona = {};
+        personas.forEach((persona) => {
+          const previous = previousSelections[persona.id];
+          const isPreviousValid = previous && persona.channels.some((channel) => channel.name === previous);
+          state.selectedChannelByPersona[persona.id] = isPreviousValid ? previous : persona.channels[0]?.name || "";
+        });
+      }
+
+      function saveStrategyCache(personas, meta) {
+        try {
+          const payload = {
+            createdAt: new Date().toISOString(),
+            personas,
+            product: meta.product,
+            selectedCategories: meta.selectedCategories,
+            selectedChannels: meta.selectedChannels,
+          };
+          localStorage.setItem(STRATEGY_CACHE_KEY, JSON.stringify(payload));
+        } catch (error) {
+          console.warn("Не удалось сохранить кэш стратегии:", error);
+        }
+      }
+
+      function loadCachedPersonas(selectedChannels) {
+        try {
+          const raw = localStorage.getItem(STRATEGY_CACHE_KEY);
+          if (!raw) return [];
+
+          const parsed = JSON.parse(raw);
+          return normalizePersonas(parsed?.personas || [], { selectedChannels: selectedChannels || [] });
+        } catch (error) {
+          console.warn("Не удалось прочитать кэш стратегии:", error);
+          return [];
+        }
+      }
+
+      function buildGeminiPrompt(payload) {
+        const { product, selectedCategories, selectedChannels, autoPickCategories, autoPickChannels } = payload;
+
+        return `Ты senior growth-маркетолог. Верни СТРОГО JSON без markdown, без пояснений, без текста до/после JSON.
+
+Контекст продукта:
+${product || "Продукт не указан, сгенерируй универсальные персоны."}
+
+Выбранные категории пользователя: ${selectedCategories.join(", ") || "не выбраны"}
+Выбранные каналы пользователя: ${selectedChannels.join(", ") || "не выбраны"}
+Флаг авто-подбора категорий AI: ${autoPickCategories ? "true" : "false"}
+Флаг авто-подбора каналов AI: ${autoPickChannels ? "true" : "false"}
+
+КРИТИЧЕСКИЕ ПРАВИЛА:
+1) Верни JSON ОБЪЕКТ с ключом "personas".
+2) "personas" — массив минимум из 3 персон.
+3) Для каждой персоны заполни поля:
+   id, name, goal, segment_description, offer_title, offer_text, tone, channels.
+4) channels ОБЯЗАТЕЛЬНО массив объектов вида:
+   { "name": "...", "advice": "..." }
+5) В каждой персоне минимум 3 канала.
+6) Если пользователь выбрал категории/каналы вручную, обязательно используй их в ответе.
+7) Не используй markdown fences и не добавляй комментарии.
+
+Ожидаемый формат:
+{
+  "personas": [
+    {
+      "id": "1",
+      "name": "...",
+      "goal": "...",
+      "segment_description": "...",
+      "offer_title": "...",
+      "offer_text": "...",
+      "tone": "...",
+      "channels": [
+        { "name": "Telegram", "advice": "..." },
+        { "name": "VKontakte", "advice": "..." },
+        { "name": "Email-рассылка", "advice": "..." }
+      ]
+    }
+  ]
+}`;
+      }
+
+      function extractGeminiErrorMessage(rawText) {
+        if (!rawText) return "Неизвестная ошибка API.";
+
+        try {
+          const parsed = JSON.parse(rawText);
+          const apiMessage = parsed?.error?.message || parsed?.message;
+          if (apiMessage) return String(apiMessage);
+        } catch (_) {
+          // Оставляем как есть, если тело не JSON.
+        }
+
+        return String(rawText).slice(0, 300);
+      }
+
+      async function requestGeminiWithRetry(prompt, apiKey, maxRetries = 4, onRetry) {
+        let lastError = null;
+
+        for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+          try {
+            const response = await fetch(getGeminiUrl(apiKey), {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [{ text: prompt }],
+                  },
+                ],
+              }),
+              signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+              const retryable = response.status === 429 || response.status === 503 || response.status >= 500;
+              const errorBody = await response.text();
+              const error = new Error(`Gemini HTTP ${response.status}: ${extractGeminiErrorMessage(errorBody)}`);
+              error.status = response.status;
+              error.retryable = retryable;
+              error.retryAfterMs = parseRetryAfterMs(response.headers.get("retry-after"));
+              throw error;
+            }
+
+            const data = await response.json();
+            const text =
+              data?.candidates?.[0]?.content?.parts?.map((part) => part.text).join("\n") ||
+              data?.candidates?.[0]?.output ||
+              "";
+
+            if (!text) {
+              const error = new Error("Пустой ответ Gemini.");
+              error.retryable = true;
+              throw error;
+            }
+
+            return text;
+          } catch (error) {
+            clearTimeout(timeoutId);
+            lastError = error;
+
+            const isAbortError = error?.name === "AbortError";
+            const retryable = error?.retryable ?? isAbortError ?? true;
+
+            if (!retryable || attempt === maxRetries) {
+              break;
+            }
+
+            const computedBackoff = Math.min(15000, 900 * 2 ** attempt + Math.floor(Math.random() * 400));
+            const retryAfterMs = Number(error?.retryAfterMs) > 0 ? Number(error.retryAfterMs) : 0;
+            const waitMs = Math.max(computedBackoff, retryAfterMs);
+
+            if (typeof onRetry === "function") {
+              onRetry({
+                attempt: attempt + 1,
+                maxRetries,
+                waitMs,
+                status: error?.status || null,
+              });
+            }
+
+            await sleep(waitMs);
+          }
+        }
+
+        throw lastError || new Error("Не удалось получить ответ Gemini.");
+      }
+
+      // --- Rendering ---
+      function renderTabs() {
+        const visualTab = document.getElementById("tab-visual");
+        const strategyTab = document.getElementById("tab-strategy");
+        const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
+
+        const isVisual = state.activeTab === "visual";
+        visualTab.classList.toggle("hidden", !isVisual);
+        strategyTab.classList.toggle("hidden", isVisual);
+
+        tabButtons.forEach((btn) => {
+          const isActive = btn.dataset.tab === state.activeTab;
+          btn.className = `tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            isActive ? "bg-violet-500 text-white shadow-glow" : "text-white/75 hover:text-white"
+          }`;
+        });
+      }
+
+      function renderCategoryPills() {
+        const container = document.getElementById("categoryPills");
+        const pills = [...defaultCategories].map((category) => {
+          const isActive = state.selectedCategories.has(category);
+          return `
+            <button type="button" class="pill text-sm px-3 py-1.5 ${isActive ? "pill-active" : ""}" data-category="${escapeHtml(category)}">
+              ${escapeHtml(category)}
+            </button>
+          `;
+        });
+
+        pills.push(`
+          <button type="button" id="addCustomCategoryBtn" class="pill text-sm px-3 py-1.5">+ Другое</button>
+        `);
+
+        container.innerHTML = pills.join("");
+      }
+
+      function renderChannelPills() {
+        const container = document.getElementById("channelPills");
+        const pills = [...defaultChannels].map((channel) => {
+          const meta = getChannelMeta(channel);
+          const isActive = state.selectedChannels.has(channel);
+          return `
+            <button type="button" class="pill text-sm px-3 py-1.5 inline-flex items-center gap-2 ${isActive ? "pill-active" : ""}" data-channel="${escapeHtml(channel)}">
+              <span class="h-5 w-5 rounded-full flex items-center justify-center ${meta.bg}">
+                <iconify-icon icon="${meta.icon}" class="${meta.color} text-xs"></iconify-icon>
+              </span>
+              ${escapeHtml(channel)}
+            </button>
+          `;
+        });
+
+        pills.push(`
+          <button type="button" id="addCustomChannelBtn" class="pill text-sm px-3 py-1.5">+ Свой канал</button>
+        `);
+
+        container.innerHTML = pills.join("");
+      }
+
+      function renderPersonaSelector() {
+        const container = document.getElementById("personaSelector");
+
+        if (!state.personas.length) {
+          container.innerHTML = `
+            <div class="inner-card rounded-xl p-4 text-sm text-white/60 col-span-full">
+              Пока нет стратегии. Перейдите в «Создать стратегию», введите API key Gemini и запустите генерацию.
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = state.personas
+          .map((persona) => {
+            const isActive = persona.id === state.activePersonaId;
+            return `
+              <button type="button" data-persona-id="${escapeHtml(persona.id)}" class="text-left inner-card glass-hover rounded-xl p-4 ${isActive ? "pill-active glow-purple" : ""}">
+                <p class="text-white font-semibold">${escapeHtml(persona.name)}</p>
+                <p class="text-xs text-white/60 mt-1">${escapeHtml(persona.goal)}</p>
+                <p class="text-xs text-white/50 mt-2 line-clamp-2">${escapeHtml(persona.segment_description)}</p>
+              </button>
+            `;
+          })
+          .join("");
+      }
+
+      function renderChannelSelect(persona) {
+        const container = document.getElementById("channelSelect");
+
+        if (!persona) {
+          container.innerHTML = `<div class="h-10 skeleton rounded-xl"></div>`;
+          return;
+        }
+
+        const selected = getSelectedChannelForPersona(persona);
+        container.innerHTML = `
+          <label class="text-xs uppercase tracking-[0.2em] text-white/50">Канал</label>
+          <select id="channelSelectDropdown" class="mt-1 w-full rounded-xl bg-black/55 border border-white/20 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-400/60">
+            ${persona.channels
+              .map(
+                (channel) =>
+                  `<option value="${escapeHtml(channel.name)}" ${channel.name === selected ? "selected" : ""}>${escapeHtml(channel.name)}</option>`
+              )
+              .join("")}
+          </select>
+        `;
+      }
+
+      function renderPersona(persona) {
+        const container = document.getElementById("personaMessaging");
+
+        if (!persona) {
+          container.innerHTML = `
+            <div class="inner-card rounded-2xl p-6">
+              <div class="h-6 w-2/3 skeleton rounded"></div>
+              <div class="h-4 w-full skeleton rounded mt-3"></div>
+              <div class="h-4 w-11/12 skeleton rounded mt-2"></div>
+            </div>
+          `;
+          return;
+        }
+
+        const selectedChannel = getSelectedChannelForPersona(persona);
+        const channelAdvice = persona.channels.find((item) => item.name === selectedChannel)?.advice || "";
+
+        container.innerHTML = `
+          <div class="space-y-4">
+            <div class="inner-card rounded-2xl p-6">
+              <p class="text-[11px] uppercase tracking-[0.18em] text-white/50">Цель сегмента</p>
+              <p class="text-white/85 mt-2">${escapeHtml(persona.goal)}</p>
+            </div>
+            <div class="inner-card rounded-2xl p-6">
+              <h3 class="text-white text-lg font-bold">${escapeHtml(persona.offer_title)}</h3>
+              <p class="text-white/70 mt-3">${escapeHtml(persona.offer_text)}</p>
+              <div class="mt-4 p-4 rounded-xl bg-black/35 border border-white/10">
+                <p class="text-xs uppercase tracking-[0.18em] text-white/45">Preview message</p>
+                <p class="text-sm text-white/80 mt-2">${escapeHtml(channelAdvice)}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderRecommendations(persona) {
+        const container = document.getElementById("recommendationsList");
+
+        if (!persona) {
+          container.innerHTML = `
+            <div class="h-16 rounded-xl skeleton"></div>
+            <div class="h-16 rounded-xl skeleton"></div>
+            <div class="h-16 rounded-xl skeleton"></div>
+          `;
+          return;
+        }
+
+        const selectedChannel = getSelectedChannelForPersona(persona);
+
+        container.innerHTML = persona.channels
+          .map((channel, index) => {
+            const meta = getChannelMeta(channel.name);
+            const isActive = selectedChannel === channel.name;
+            return `
+              <div class="rounded-xl border p-3 ${isActive ? "border-violet-300/70 bg-violet-500/15" : "border-white/10 bg-black/25"}">
+                <div class="flex items-center gap-2">
+                  <span class="h-7 w-7 rounded-full flex items-center justify-center ${meta.bg}">
+                    <iconify-icon icon="${meta.icon}" class="${meta.color} text-sm"></iconify-icon>
+                  </span>
+                  <p class="text-sm font-medium text-white/95">#${index + 1} ${escapeHtml(channel.name)}</p>
+                </div>
+                <p class="text-sm text-white/70 mt-2">${escapeHtml(channel.advice)}</p>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderFunnel(persona) {
+        const container = document.getElementById("funnelSteps");
+
+        if (!persona) {
+          container.innerHTML = `
+            <div class="h-24 rounded-xl skeleton"></div>
+            <div class="h-24 rounded-xl skeleton"></div>
+            <div class="h-24 rounded-xl skeleton"></div>
+            <div class="h-24 rounded-xl skeleton"></div>
+          `;
+          return;
+        }
+
+        const steps = [
+          {
+            step: "Этап 1",
+            title: "Привлечение",
+            desc: `Запустите сообщение для «${persona.name}» через высокочастотные касания и понятный оффер.`,
+          },
+          {
+            step: "Этап 2",
+            title: "Интерес",
+            desc: "Подтвердите ценность кейсами, фактами и короткой демонстрацией результата.",
+          },
+          {
+            step: "Этап 3",
+            title: "Конверсия",
+            desc: "Добавьте ограниченный оффер и упрощённый шаг входа для быстрого решения.",
+          },
+          {
+            step: "Этап 4",
+            title: "Удержание",
+            desc: "Соберите обратную связь и предложите следующий шаг для долгосрочного цикла.",
+          },
+        ];
+
+        container.innerHTML = steps
+          .map(
+            (item) => `
+              <div class="rounded-xl border border-white/10 bg-black/25 p-4">
+                <p class="text-[10px] uppercase tracking-[0.18em] text-white/45">${item.step}</p>
+                <p class="font-semibold mt-2">${item.title}</p>
+                <p class="text-sm text-white/65 mt-2">${escapeHtml(item.desc)}</p>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderTone(persona) {
+        const toneValueEl = document.getElementById("toneValue");
+        const toneTipsEl = document.getElementById("toneTips");
+
+        if (!persona) {
+          toneValueEl.innerHTML = `<div class="h-5 w-2/3 rounded skeleton"></div>`;
+          toneTipsEl.innerHTML = `
+            <div class="h-9 rounded-xl skeleton"></div>
+            <div class="h-9 rounded-xl skeleton"></div>
+            <div class="h-9 rounded-xl skeleton"></div>
+          `;
+          return;
+        }
+
+        toneValueEl.textContent = persona.tone;
+
+        const tips = [
+          "Используйте конкретные выгоды вместо абстрактных обещаний.",
+          "Добавляйте уверенный CTA с ясным следующим шагом.",
+          "Сохраняйте единый стиль коммуникации во всех каналах.",
+        ];
+
+        toneTipsEl.innerHTML = tips
+          .map(
+            (tip) => `
+              <div class="rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-sm text-white/75">• ${escapeHtml(tip)}</div>
+            `
+          )
+          .join("");
+      }
+
+      function renderDashboard() {
+        const persona = getActivePersona();
+        renderPersonaSelector();
+        renderChannelSelect(persona);
+        renderPersona(persona);
+        renderRecommendations(persona);
+        renderFunnel(persona);
+        renderTone(persona);
+      }
+
+      function renderLoadingSkeleton() {
+        document.getElementById("personaSelector").innerHTML = `
+          <div class="h-24 rounded-xl skeleton"></div>
+          <div class="h-24 rounded-xl skeleton"></div>
+          <div class="h-24 rounded-xl skeleton"></div>
+        `;
+
+        renderChannelSelect(null);
+        renderPersona(null);
+        renderRecommendations(null);
+        renderFunnel(null);
+        renderTone(null);
+      }
+
+      function renderStrategyControls() {
+        renderCategoryPills();
+        renderChannelPills();
+
+        const autoCategories = document.getElementById("autoPickCategories");
+        const autoChannels = document.getElementById("autoPickChannels");
+        autoCategories.checked = false;
+        autoChannels.checked = false;
+
+        const apiKeyInput = document.getElementById("geminiApiKeyInput");
+        apiKeyInput.value = state.geminiApiKey;
+      }
+
+      // --- Interaction ---
+      function switchTab(tab) {
+        state.activeTab = tab;
+        renderTabs();
+      }
+
+      function setHint(message, kind = "neutral") {
+        const hint = document.getElementById("strategyHint");
+        const map = {
+          neutral: "text-white/70",
+          success: "text-emerald-300/90",
+          error: "text-rose-300/90",
+          warn: "text-amber-300/90",
+        };
+
+        hint.className = `text-sm ${map[kind] || map.neutral}`;
+        hint.textContent = message;
+      }
+
+      function setGenerateLoading(isLoading) {
+        state.isGenerating = isLoading;
+        const button = document.getElementById("generateStrategyBtn");
+
+        button.disabled = isLoading;
+        button.innerHTML = isLoading
+          ? `<span class="spinner"></span><span>Генерация стратегии...</span>`
+          : "Сгенерировать стратегию";
+      }
+
+      function addCustomCategory() {
+        const value = prompt("Введите свою категорию:");
+        if (!value) return;
+        const normalized = value.trim();
+        if (!normalized) return;
+
+        if (!defaultCategories.includes(normalized)) {
+          defaultCategories.push(normalized);
+        }
+        state.selectedCategories.add(normalized);
+        renderCategoryPills();
+      }
+
+      function addCustomChannel() {
+        const value = prompt("Введите свой канал:");
+        if (!value) return;
+        const normalized = value.trim();
+        if (!normalized) return;
+
+        if (!defaultChannels.includes(normalized)) {
+          defaultChannels.push(normalized);
+        }
+        state.selectedChannels.add(normalized);
+        renderChannelPills();
+      }
+
+      function bindStaticEvents() {
+        document.getElementById("switchToVisual").addEventListener("click", () => switchTab("visual"));
+        document.getElementById("switchToStrategy").addEventListener("click", () => switchTab("strategy"));
+
+        document.getElementById("geminiApiKeyInput").addEventListener("input", (event) => {
+          state.geminiApiKey = String(event.target.value || "").trim();
+          saveGeminiApiKey(state.geminiApiKey);
+        });
+
+        document.getElementById("categoryPills").addEventListener("click", (event) => {
+          const addBtn = event.target.closest("#addCustomCategoryBtn");
+          if (addBtn) {
+            addCustomCategory();
+            return;
+          }
+
+          const button = event.target.closest("[data-category]");
+          if (!button) return;
+          const category = button.dataset.category;
+          if (!category) return;
+
+          if (state.selectedCategories.has(category)) {
+            state.selectedCategories.delete(category);
+          } else {
+            state.selectedCategories.add(category);
+          }
+
+          renderCategoryPills();
+        });
+
+        document.getElementById("channelPills").addEventListener("click", (event) => {
+          const addBtn = event.target.closest("#addCustomChannelBtn");
+          if (addBtn) {
+            addCustomChannel();
+            return;
+          }
+
+          const button = event.target.closest("[data-channel]");
+          if (!button) return;
+          const channel = button.dataset.channel;
+          if (!channel) return;
+
+          if (state.selectedChannels.has(channel)) {
+            state.selectedChannels.delete(channel);
+          } else {
+            state.selectedChannels.add(channel);
+          }
+
+          renderChannelPills();
+        });
+
+        document.getElementById("personaSelector").addEventListener("click", (event) => {
+          const button = event.target.closest("[data-persona-id]");
+          if (!button) return;
+          const personaId = button.dataset.personaId;
+          if (!personaId) return;
+          state.activePersonaId = personaId;
+          renderDashboard();
+        });
+
+        document.getElementById("channelSelect").addEventListener("change", (event) => {
+          if (event.target.id !== "channelSelectDropdown") return;
+          const persona = getActivePersona();
+          if (!persona) return;
+          state.selectedChannelByPersona[persona.id] = event.target.value;
+          renderPersona(persona);
+          renderRecommendations(persona);
+        });
+
+        document.getElementById("generateStrategyBtn").addEventListener("click", async () => {
+          await generateStrategy();
+        });
+      }
+
+      function restoreSnapshot(snapshot) {
+        state.personas = snapshot.personas;
+        state.activePersonaId = snapshot.activePersonaId;
+        state.selectedChannelByPersona = snapshot.selectedChannelByPersona;
+        renderDashboard();
+      }
+
+      async function generateStrategy() {
+        const product = document.getElementById("productPrompt").value.trim();
+        const selectedCategories = [...state.selectedCategories];
+        const selectedChannels = [...state.selectedChannels];
+        const autoPickCategories = document.getElementById("autoPickCategories").checked;
+        const autoPickChannels = document.getElementById("autoPickChannels").checked;
+        const apiKey = state.geminiApiKey.trim();
+
+        if (!apiKey) {
+          setHint("Укажите Gemini API key перед генерацией.", "error");
+          switchTab("strategy");
+          return;
+        }
+
+        const snapshot = {
+          personas: JSON.parse(JSON.stringify(state.personas)),
+          activePersonaId: state.activePersonaId,
+          selectedChannelByPersona: JSON.parse(JSON.stringify(state.selectedChannelByPersona)),
+        };
+
+        setGenerateLoading(true);
+        setHint("Генерируем стратегию через Gemini и подготавливаем визуализацию...", "neutral");
+
+        switchTab("visual");
+        renderLoadingSkeleton();
+
+        try {
+          const prompt = buildGeminiPrompt({
+            product,
+            selectedCategories,
+            selectedChannels,
+            autoPickCategories,
+            autoPickChannels,
+          });
+
+          const rawText = await requestGeminiWithRetry(prompt, apiKey, 4, ({ attempt, maxRetries, waitMs, status }) => {
+            const statusLabel = status ? ` (${status})` : "";
+            setHint(
+              `Gemini временно недоступен${statusLabel}. Повтор ${attempt}/${maxRetries} через ${Math.ceil(waitMs / 1000)}с...`,
+              "warn"
+            );
+          });
+
+          const parsed = parseGeminiJson(rawText);
+          const extracted = extractPersonasFromResponse(parsed);
+          const personas = normalizePersonas(extracted, { selectedChannels });
+
+          if (!personas.length) {
+            const parseError = new Error("Gemini вернул неполный или невалидный JSON-ответ.");
+            parseError.retryable = false;
+            throw parseError;
+          }
+
+          applyPersonas(personas);
+          saveStrategyCache(personas, { product, selectedCategories, selectedChannels });
+          renderDashboard();
+          setHint("Стратегия успешно сгенерирована через Gemini.", "success");
+        } catch (error) {
+          const status = Number(error?.status) || null;
+          if (snapshot.personas.length) {
+            restoreSnapshot(snapshot);
+            setHint(`Gemini недоступен${status ? ` (${status})` : ""}. Сохраняем предыдущую стратегию без замены.`, "warn");
+          } else {
+            applyPersonas([]);
+            renderDashboard();
+            setHint(
+              `Не удалось получить стратегию из Gemini${status ? ` (${status})` : ""}. Проверьте API key, billing, квоты и сеть.`,
+              "error"
+            );
+          }
+          console.warn("Gemini error:", error);
+        } finally {
+          setGenerateLoading(false);
+        }
+      }
+
+      function bootstrap() {
+        state.geminiApiKey = loadSavedGeminiApiKey();
+
+        renderTabs();
+        renderStrategyControls();
+        bindStaticEvents();
+
+        const cached = loadCachedPersonas([...state.selectedChannels]);
+        if (cached.length) {
+          applyPersonas(cached);
+          renderDashboard();
+          setHint("Загружена последняя стратегия из Gemini-кэша. Можно перегенерировать в любой момент.", "neutral");
+          return;
+        }
+
+        applyPersonas([]);
+        renderDashboard();
+        setHint("Введите продукт и Gemini API key, затем нажмите «Сгенерировать стратегию».", "neutral");
+      }
+
+      bootstrap();
+    </script>
+  </body>
+</html>
