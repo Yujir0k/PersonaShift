@@ -17,7 +17,7 @@
 
 ### Сертификат полученный по завершению хакатона:
 
-[Борисов Игорь Олегович PersonaShift (1).pdf](https://github.com/user-attachments/files/26764666/PersonaShift.1.pdf)
+[Борисов Игорь Олегович PersonaShift.pdf](https://github.com/user-attachments/files/26764717/PersonaShift.pdf)
 
 </div>
 
