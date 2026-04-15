@@ -14,6 +14,11 @@
 
 [О проекте](#-о-проекте) • [Функционал](#-ключевой-функционал) • [Быстрый старт](#-быстрый-старт)
 
+
+### Сертификат полученный по завершению хакатона:
+
+[Борисов Игорь Олегович PersonaShift (1).pdf](https://github.com/user-attachments/files/26764666/PersonaShift.1.pdf)
+
 </div>
 
 ---
@@ -78,3 +83,8 @@ https://github.com/user-attachments/assets/77c79354-c2b3-44c1-8d92-0597815b32f1
   <br>
   <p>Создано с ❤️ для маркетологов, разработчиков и фаундеров.</p>
 </div>
+
+## Сертификат полученный по завершению хакатона:
+
+[Борисов Игорь Олегович PersonaShift (1).pdf](https://github.com/user-attachments/files/26764666/PersonaShift.1.pdf)
+
